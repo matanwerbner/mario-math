@@ -13,6 +13,7 @@ Mario.LevelState = function(difficulty, type) {
     this.Paused = false;
     this.QuizActive = false;
     this.QuizTimer = 0;
+    this.QuizSolved = 0;
     this.Sprites = null;
     this.SpritesToAdd = null;
     this.SpritesToRemove = null;
@@ -52,6 +53,7 @@ Mario.LevelState.prototype.Enter = function() {
     this.Paused = false;
     this.QuizActive = false;
     this.QuizTimer = 0;
+    this.QuizSolved = 0;
     this.Layer = new Mario.LevelRenderer(this.Level, 320, 240);
     this.Sprites = new Enjine.DrawableManager();
     this.Camera = new Enjine.Camera();
@@ -119,6 +121,7 @@ Mario.LevelState.prototype.Update = function(delta) {
         timerWorld.QuizActive = true;
         Mario.MathQuiz.show(function() {
             timerWorld.QuizActive = false;
+            timerWorld.QuizSolved += 1;
         });
         return;
     }
@@ -309,6 +312,8 @@ Mario.LevelState.prototype.Draw = function(context) {
 
     this.DrawStringShadow(context, "MARIO " + Mario.MarioCharacter.Lives, 0, 0);
     this.DrawStringShadow(context, "00000000", 0, 1);
+    this.DrawStringShadow(context, "SOLVED", 7, 0);
+    this.DrawStringShadow(context, "  " + this.QuizSolved, 7, 1);
     this.DrawStringShadow(context, "COIN", 14, 0);
     this.DrawStringShadow(context, " " + Mario.MarioCharacter.Coins, 14, 1);
     this.DrawStringShadow(context, "WORLD", 24, 0);
@@ -444,6 +449,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
             world.QuizActive = true;
             Mario.MathQuiz.show(function() {
                 world.QuizActive = false;
+                world.QuizSolved += 1;
                 world.BumpInto(x, y - 1);
                 if (isSpecial) {
                     Enjine.Resources.PlaySound("sprout");
