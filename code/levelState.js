@@ -423,14 +423,14 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
         var isSpecial = (Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Special) > 0;
         var isLarge = Mario.MarioCharacter.Large;
 
+        world.Level.SetBlock(x, y, 4);
+        world.Level.SetBlockData(x, y, 4);
         world.QuizActive = true;
 
         Mario.MathQuiz.show(function() {
             world.QuizActive = false;
 
             world.BumpInto(x, y - 1);
-            world.Level.SetBlock(x, y, 4);
-            world.Level.SetBlockData(x, y, 4);
 
             if (isSpecial) {
                 Enjine.Resources.PlaySound("sprout");

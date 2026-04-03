@@ -70,9 +70,15 @@ Mario.MathQuiz = (function() {
             questionEl = document.getElementById('math-quiz-question');
             inputEl = document.getElementById('math-quiz-input');
             errorEl = document.getElementById('math-quiz-error');
+            if (overlay) {
+                overlay.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                });
+            }
         }
 
         if (!overlay) {
+            if (callback) { callback(); }
             return;
         }
 
