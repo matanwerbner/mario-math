@@ -12,6 +12,7 @@ Mario.LevelState = function(difficulty, type) {
 
     this.Paused = false;
     this.QuizActive = false;
+    this.QuizTimer = 0;
     this.Sprites = null;
     this.SpritesToAdd = null;
     this.SpritesToRemove = null;
@@ -50,6 +51,7 @@ Mario.LevelState.prototype.Enter = function() {
 
     this.Paused = false;
     this.QuizActive = false;
+    this.QuizTimer = 0;
     this.Layer = new Mario.LevelRenderer(this.Level, 320, 240);
     this.Sprites = new Enjine.DrawableManager();
     this.Camera = new Enjine.Camera();
@@ -107,6 +109,17 @@ Mario.LevelState.prototype.Update = function(delta) {
         dir = 0, st = null, b = 0;
 
     if (this.QuizActive) {
+        return;
+    }
+
+    this.QuizTimer += delta;
+    if (this.QuizTimer >= 60) {
+        this.QuizTimer = 0;
+        var timerWorld = this;
+        timerWorld.QuizActive = true;
+        Mario.MathQuiz.show(function() {
+            timerWorld.QuizActive = false;
+        });
         return;
     }
 
