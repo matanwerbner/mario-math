@@ -41,6 +41,10 @@ Mario.MathQuiz = (function() {
 
     function checkAnswer() {
         var val = parseInt(inputEl.value, 10);
+        if (isNaN(val)) {
+            errorEl.textContent = 'Enter a number.';
+            return;
+        }
         if (val === correctAnswer) {
             hide();
             if (successCallback) {
@@ -68,6 +72,10 @@ Mario.MathQuiz = (function() {
             errorEl = document.getElementById('math-quiz-error');
         }
 
+        if (!overlay) {
+            return;
+        }
+
         var problem = generate();
         correctAnswer = problem.answer;
         successCallback = callback;
@@ -78,6 +86,7 @@ Mario.MathQuiz = (function() {
 
         overlay.classList.add('active');
         inputEl.focus();
+        inputEl.removeEventListener('keydown', onKeyDown);
         inputEl.addEventListener('keydown', onKeyDown);
     }
 
