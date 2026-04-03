@@ -53,7 +53,7 @@ Mario.LevelState.prototype.Enter = function() {
     this.Paused = false;
     this.QuizActive = false;
     this.QuizTimer = 0;
-    this.QuizSolved = 0;
+    this.QuizSolved = parseInt(localStorage.getItem('quizSolved') || '0', 10);
     this.Layer = new Mario.LevelRenderer(this.Level, 320, 240);
     this.Sprites = new Enjine.DrawableManager();
     this.Camera = new Enjine.Camera();
@@ -115,13 +115,14 @@ Mario.LevelState.prototype.Update = function(delta) {
     }
 
     this.QuizTimer += delta;
-    if (this.QuizTimer >= 60) {
+    if (this.QuizTimer >= 40) {
         this.QuizTimer = 0;
         var timerWorld = this;
         timerWorld.QuizActive = true;
         Mario.MathQuiz.show(function() {
             timerWorld.QuizActive = false;
             timerWorld.QuizSolved += 1;
+            localStorage.setItem('quizSolved', timerWorld.QuizSolved);
         });
         return;
     }
@@ -450,6 +451,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
             Mario.MathQuiz.show(function() {
                 world.QuizActive = false;
                 world.QuizSolved += 1;
+                localStorage.setItem('quizSolved', world.QuizSolved);
                 world.BumpInto(x, y - 1);
                 if (isSpecial) {
                     Enjine.Resources.PlaySound("sprout");
