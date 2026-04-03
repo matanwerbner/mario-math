@@ -418,6 +418,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
     var block = this.Level.GetBlock(x, y), xx = 0, yy = 0;
 
     if ((Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Bumpable) > 0) {
+        if (this.QuizActive) { return; }
         var world = this;
         var isSpecial = (Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Special) > 0;
         var isLarge = Mario.MarioCharacter.Large;
