@@ -19,8 +19,8 @@ Mario.MathQuiz = (function() {
             answer = a + b;
             question = a + ' + ' + b + ' = ?';
         } else if (op === '-') {
-            a = ((Math.random() * 20) | 0) + 1;
-            b = ((Math.random() * a) | 0) + 1;
+            a = ((Math.random() * 19) | 0) + 2;
+            b = ((Math.random() * (a - 1)) | 0) + 1;
             answer = a - b;
             question = a + ' - ' + b + ' = ?';
         } else {
