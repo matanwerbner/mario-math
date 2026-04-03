@@ -418,22 +418,32 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
     var block = this.Level.GetBlock(x, y), xx = 0, yy = 0;
 
     if ((Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Bumpable) > 0) {
-        this.BumpInto(x, y - 1);
-        this.Level.SetBlock(x, y, 4);
-        this.Level.SetBlockData(x, y, 4);
+        var world = this;
+        var isSpecial = (Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Special) > 0;
+        var isLarge = Mario.MarioCharacter.Large;
 
-        if ((Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Special) > 0) {
-            Enjine.Resources.PlaySound("sprout");
-            if (!Mario.MarioCharacter.Large) {
-                this.AddSprite(new Mario.Mushroom(this, x * 16 + 8, y * 16 + 8));
+        world.QuizActive = true;
+
+        Mario.MathQuiz.show(function() {
+            world.QuizActive = false;
+
+            world.BumpInto(x, y - 1);
+            world.Level.SetBlock(x, y, 4);
+            world.Level.SetBlockData(x, y, 4);
+
+            if (isSpecial) {
+                Enjine.Resources.PlaySound("sprout");
+                if (!isLarge) {
+                    world.AddSprite(new Mario.Mushroom(world, x * 16 + 8, y * 16 + 8));
+                } else {
+                    world.AddSprite(new Mario.FireFlower(world, x * 16 + 8, y * 16 + 8));
+                }
             } else {
-                this.AddSprite(new Mario.FireFlower(this, x * 16 + 8, y * 16 + 8));
+                Mario.MarioCharacter.GetCoin();
+                Enjine.Resources.PlaySound("coin");
+                world.AddSprite(new Mario.CoinAnim(world, x, y));
             }
-        } else {
-            Mario.MarioCharacter.GetCoin();
-            Enjine.Resources.PlaySound("coin");
-            this.AddSprite(new Mario.CoinAnim(this, x, y));
-        }
+        });
     }
 
     if ((Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Breakable) > 0) {
