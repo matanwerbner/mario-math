@@ -438,13 +438,28 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
 
         world.Level.SetBlock(x, y, 4);
         world.Level.SetBlockData(x, y, 4);
-        world.QuizActive = true;
 
-        Mario.MathQuiz.show(function() {
-            world.QuizActive = false;
-
+        if (Math.random() < 1/3) {
+            world.QuizTimer = 0;
+            world.QuizActive = true;
+            Mario.MathQuiz.show(function() {
+                world.QuizActive = false;
+                world.BumpInto(x, y - 1);
+                if (isSpecial) {
+                    Enjine.Resources.PlaySound("sprout");
+                    if (!isLarge) {
+                        world.AddSprite(new Mario.Mushroom(world, x * 16 + 8, y * 16 + 8));
+                    } else {
+                        world.AddSprite(new Mario.FireFlower(world, x * 16 + 8, y * 16 + 8));
+                    }
+                } else {
+                    Mario.MarioCharacter.GetCoin();
+                    Enjine.Resources.PlaySound("coin");
+                    world.AddSprite(new Mario.CoinAnim(world, x, y));
+                }
+            });
+        } else {
             world.BumpInto(x, y - 1);
-
             if (isSpecial) {
                 Enjine.Resources.PlaySound("sprout");
                 if (!isLarge) {
@@ -457,7 +472,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
                 Enjine.Resources.PlaySound("coin");
                 world.AddSprite(new Mario.CoinAnim(world, x, y));
             }
-        });
+        }
     }
 
     if ((Mario.Tile.Behaviors[block & 0xff] & Mario.Tile.Breakable) > 0) {
