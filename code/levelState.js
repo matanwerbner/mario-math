@@ -11,6 +11,7 @@ Mario.LevelState = function(difficulty, type) {
     this.BgLayer = [];
 
     this.Paused = false;
+    this.QuizActive = false;
     this.Sprites = null;
     this.SpritesToAdd = null;
     this.SpritesToRemove = null;
@@ -48,6 +49,7 @@ Mario.LevelState.prototype.Enter = function() {
     }
 
     this.Paused = false;
+    this.QuizActive = false;
     this.Layer = new Mario.LevelRenderer(this.Level, 320, 240);
     this.Sprites = new Enjine.DrawableManager();
     this.Camera = new Enjine.Camera();
@@ -103,6 +105,10 @@ Mario.LevelState.prototype.CheckFireballCollide = function(fireball) {
 Mario.LevelState.prototype.Update = function(delta) {
     var i = 0, j = 0, xd = 0, yd = 0, sprite = null, hasShotCannon = false, xCannon = 0, x = 0, y = 0,
         dir = 0, st = null, b = 0;
+
+    if (this.QuizActive) {
+        return;
+    }
 
     this.Delta = delta;
 
