@@ -10,24 +10,40 @@ Mario.MathQuiz = (function() {
 
     function generate() {
         var ops = ['+', '-', '*'];
-        var op = ops[(Math.random() * 3) | 0];
-        var a, b, question, answer;
+        var op1 = ops[(Math.random() * 3) | 0];
+        var op2 = ops[(Math.random() * 3) | 0];
+        var a, b, c, answer, question;
 
-        if (op === '+') {
-            a = ((Math.random() * 20) | 0) + 1;
-            b = ((Math.random() * 20) | 0) + 1;
-            answer = a + b;
-            question = a + ' + ' + b + ' = ?';
-        } else if (op === '-') {
-            a = ((Math.random() * 19) | 0) + 2;
-            b = ((Math.random() * (a - 1)) | 0) + 1;
-            answer = a - b;
-            question = a + ' - ' + b + ' = ?';
+        function randOperand() {
+            var n = ((Math.random() * 10) | 0) + 1;
+            return Math.random() < 0.5 ? n : -n;
+        }
+
+        a = randOperand();
+        b = randOperand();
+        c = randOperand();
+
+        // Compute answer using standard JS precedence via Function constructor
+        var exprStr = '(' + a + ')' + op1 + '(' + b + ')' + op2 + '(' + c + ')';
+        answer = (new Function('return ' + exprStr))();
+
+        function displayOp(op) {
+            return op === '*' ? '\u00d7' : op;
+        }
+
+        function fmt(n) {
+            return n < 0 ? '(' + n + ')' : '' + n;
+        }
+
+        if (op1 === '*' && op2 !== '*') {
+            // (a × b) OP2 c
+            question = '(' + fmt(a) + ' \u00d7 ' + fmt(b) + ') ' + displayOp(op2) + ' ' + fmt(c) + ' = ?';
+        } else if (op2 === '*' && op1 !== '*') {
+            // a OP1 (b × c)
+            question = fmt(a) + ' ' + displayOp(op1) + ' (' + fmt(b) + ' \u00d7 ' + fmt(c) + ') = ?';
         } else {
-            a = ((Math.random() * 9) | 0) + 2;
-            b = ((Math.random() * 9) | 0) + 2;
-            answer = a * b;
-            question = a + ' \u00d7 ' + b + ' = ?';
+            // a OP1 b OP2 c  (all same precedence level, or both *)
+            question = fmt(a) + ' ' + displayOp(op1) + ' ' + fmt(b) + ' ' + displayOp(op2) + ' ' + fmt(c) + ' = ?';
         }
 
         return { question: question, answer: answer };
