@@ -23,9 +23,20 @@ Mario.MathQuiz = (function() {
         b = randOperand();
         c = randOperand();
 
-        // Compute answer using standard JS precedence via Function constructor
-        var exprStr = '(' + a + ')' + op1 + '(' + b + ')' + op2 + '(' + c + ')';
-        answer = (new Function('return ' + exprStr))();
+        // Compute answer respecting operator precedence (× before +/−)
+        if (op1 === '*' && op2 === '*') {
+            answer = a * b * c;
+        } else if (op1 === '*') {
+            // (a * b) op2 c
+            answer = (a * b) + (op2 === '+' ? c : -c);
+        } else if (op2 === '*') {
+            // a op1 (b * c)
+            answer = a + (op1 === '+' ? 1 : -1) * (b * c);
+        } else {
+            // a op1 b op2 c  (all +/-)
+            var ab = op1 === '+' ? a + b : a - b;
+            answer = op2 === '+' ? ab + c : ab - c;
+        }
 
         function displayOp(op) {
             return op === '*' ? '\u00d7' : op;
