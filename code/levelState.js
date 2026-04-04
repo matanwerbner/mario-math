@@ -118,7 +118,7 @@ Mario.LevelState.prototype.Update = function(delta) {
     }
 
     this.QuizTimer += delta;
-    if (this.QuizTimer >= 40) {
+    if (this.QuizTimer >= 30) {
         this.QuizTimer = 0;
         var timerWorld = this;
         timerWorld.QuizActive = true;
@@ -454,7 +454,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
         world.Level.SetBlock(x, y, 4);
         world.Level.SetBlockData(x, y, 4);
 
-        if (Math.random() < 1/3) {
+        if (Math.random() < 1/3 && world.QuizTimer >= 30) {
             world.QuizTimer = 0;
             world.QuizActive = true;
             Mario.MathQuiz.show(function(firstTry) {
