@@ -596,7 +596,6 @@ Mario.Character.prototype.Die = function() {
     this.YDeathPos = this.Y | 0;
     this.World.Paused = true;
     this.DeathTime = 1;
-    Enjine.Resources.PlaySound("death");
     this.SetLarge(false, false);
 };
 

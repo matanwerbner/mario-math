@@ -1,48 +1,37 @@
-/*
-* using cross platform MIDI library MIDI.js http://www.midijs.net/
-*/
+var Mario = Mario || {};
 
-var midifiles = {
-	"title" : "midi/title.mid",
-	"map" : "midi/map.mid",
-	"background" : "midi/background.mid",
-	"overground" : "midi/overground.mid",
-	"underground" : "midi/underground.mid",
-	"castle" : "midi/castle.mid",
-};
-
-Mario.PlayMusic = function(name) {
-	if(name in midifiles)
-	{
-		// Currently we stop all playing tracks when playing a new one
-		// MIDIjs can't play multiple at one time
-		//MIDIjs.stop();;
-		//MIDIjs.play(midifiles[name]);
-	}else{
-		console.error("Cannot play music track " + name + " as i have no data for it.");
-	}
-};
-
-Mario.PlayTitleMusic = function() {
-	Mario.PlayMusic("title");
-};
-
-Mario.PlayMapMusic = function() {
-	Mario.PlayMusic("map");
-};
-
-Mario.PlayOvergroundMusic = function() {
-	Mario.PlayMusic("background");
-};
-
-Mario.PlayUndergroundMusic = function() {
-	Mario.PlayMusic("underground");
-};
-
-Mario.PlayCastleMusic = function() {
-	Mario.PlayMusic("castle");
+Mario.PlayMusic = function() {
+    var el = document.getElementById('bg-music');
+    if (!el) { return; }
+    if (el.paused) {
+        el.currentTime = 0;
+        el.play();
+    }
 };
 
 Mario.StopMusic = function() {
-	//MIDIjs.stop();
+    var el = document.getElementById('bg-music');
+    if (!el) { return; }
+    el.pause();
 };
+
+Mario.PlayLevelComplete = function() {
+    var el = document.getElementById('jingle-level-complete');
+    if (el) { el.currentTime = 0; el.play(); }
+};
+
+Mario.PlayLostALife = function() {
+    var el = document.getElementById('jingle-lost-a-life');
+    if (el) { el.currentTime = 0; el.play(); }
+};
+
+Mario.PlayGameOver = function() {
+    var el = document.getElementById('jingle-game-over');
+    if (el) { el.currentTime = 0; el.play(); }
+};
+
+Mario.PlayTitleMusic    = Mario.PlayMusic;
+Mario.PlayMapMusic      = Mario.PlayMusic;
+Mario.PlayOvergroundMusic = Mario.PlayMusic;
+Mario.PlayUndergroundMusic = Mario.PlayMusic;
+Mario.PlayCastleMusic   = Mario.PlayMusic;

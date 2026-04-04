@@ -14,6 +14,7 @@ Mario.TitleState = function() {
 Mario.TitleState.prototype = new Enjine.GameState();
 
 Mario.TitleState.prototype.Enter = function() {
+    this.promptShown = false;
     this.drawManager = new Enjine.DrawableManager();
     this.camera = new Enjine.Camera();
 
@@ -49,8 +50,6 @@ Mario.TitleState.prototype.Enter = function() {
 };
 
 Mario.TitleState.prototype.Exit = function() {
-    Mario.StopMusic();
-	
     this.drawManager.Clear();
     delete this.drawManager;
     delete this.camera;
@@ -72,11 +71,18 @@ Mario.TitleState.prototype.Draw = function(context) {
     context.drawImage(Enjine.Resources.Images["title"], 0, 120);
     context.drawImage(Enjine.Resources.Images["logo"], 0, this.logoY);
 
-    this.font.Draw(context, this.Camera);
+    this.font.Draw(context, this.camera);
+
+    Mario.NamePrompt.draw(context);
 };
 
 Mario.TitleState.prototype.CheckForChange = function(context) {
-    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.S)) {
-        context.ChangeState(Mario.GlobalMapState);
+    if (Enjine.KeyboardInput.IsKeyDown(Enjine.Keys.S) && !this.promptShown) {
+        this.promptShown = true;
+        Mario.StopMusic();
+        Mario.NamePrompt.show(function() {
+            Mario.PlayMusic();
+            context.ChangeState(Mario.GlobalMapState);
+        });
     }
 };

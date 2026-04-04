@@ -14,6 +14,7 @@ Mario.LevelState = function(difficulty, type) {
     this.QuizActive = false;
     this.QuizTimer = 0;
     this.QuizSolved = 0;
+    this.SessionPoints = 0;
     this.Sprites = null;
     this.SpritesToAdd = null;
     this.SpritesToRemove = null;
@@ -53,7 +54,8 @@ Mario.LevelState.prototype.Enter = function() {
     this.Paused = false;
     this.QuizActive = false;
     this.QuizTimer = 0;
-    this.QuizSolved = parseInt(localStorage.getItem('quizSolved') || '0', 10);
+    this.QuizSolved = Mario.Scores.getScore(Mario.CurrentPlayer);
+    this.SessionPoints = 0;
     this.Layer = new Mario.LevelRenderer(this.Level, 320, 240);
     this.Sprites = new Enjine.DrawableManager();
     this.Camera = new Enjine.Camera();
@@ -83,6 +85,7 @@ Mario.LevelState.prototype.Enter = function() {
 
 	this.GotoMapState = false;
 	this.GotoLoseState = false;
+    this.MusicStopped = false;
 };
 
 Mario.LevelState.prototype.Exit = function() {
@@ -119,10 +122,13 @@ Mario.LevelState.prototype.Update = function(delta) {
         this.QuizTimer = 0;
         var timerWorld = this;
         timerWorld.QuizActive = true;
-        Mario.MathQuiz.show(function() {
+        Mario.MathQuiz.show(function(firstTry) {
+            var pts = firstTry ? 2 : 1;
             timerWorld.QuizActive = false;
-            timerWorld.QuizSolved += 1;
-            localStorage.setItem('quizSolved', timerWorld.QuizSolved);
+            timerWorld.SessionPoints += pts;
+            timerWorld.QuizSolved = Mario.Scores.getScore(Mario.CurrentPlayer) + timerWorld.SessionPoints;
+            Mario.Scores.add(Mario.CurrentPlayer, pts);
+            Mario.ShowCongrats.show(firstTry);
         });
         return;
     }
@@ -311,9 +317,9 @@ Mario.LevelState.prototype.Draw = function(context) {
 
     this.Layer.DrawExit1(context, this.Camera);
 
-    this.DrawStringShadow(context, "MARIO " + Mario.MarioCharacter.Lives, 0, 0);
+    this.DrawStringShadow(context, (Mario.CurrentPlayer.substring(0, 6).toUpperCase() + " " + Mario.MarioCharacter.Lives), 0, 0);
     this.DrawStringShadow(context, "00000000", 0, 1);
-    this.DrawStringShadow(context, "SOLVED", 7, 0);
+    this.DrawStringShadow(context, "POINTS", 7, 0);
     this.DrawStringShadow(context, "  " + this.QuizSolved, 7, 1);
     this.DrawStringShadow(context, "COIN", 14, 0);
     this.DrawStringShadow(context, " " + Mario.MarioCharacter.Coins, 14, 1);
@@ -333,7 +339,7 @@ Mario.LevelState.prototype.Draw = function(context) {
     }
 
     if (Mario.MarioCharacter.WinTime > 0) {
-    	Mario.StopMusic();
+    	if (!this.MusicStopped) { Mario.StopMusic(); Mario.PlayLevelComplete(); this.MusicStopped = true; }
         t = Mario.MarioCharacter.WinTime + this.Delta;
         t = t * t * 0.2;
 
@@ -347,21 +353,24 @@ Mario.LevelState.prototype.Draw = function(context) {
     }
 
     if (Mario.MarioCharacter.DeathTime > 0) {
-    	Mario.StopMusic();
+    	if (!this.MusicStopped) {
+    	    Mario.StopMusic();
+    	    if (Mario.MarioCharacter.Lives <= 1) { Mario.PlayGameOver(); } else { Mario.PlayLostALife(); }
+    	    this.MusicStopped = true;
+    	}
         t = Mario.MarioCharacter.DeathTime + this.Delta;
         t = t * t * 0.1;
 
         if (t > 900) {
-            //TODO: goto map with level lost
-			Mario.MarioCharacter.Lives--;
-			this.GotoMapState = true;
-			if (Mario.MarioCharacter.Lives <= 0) {
-				this.GotoLoseState = true;
-			}
+            Mario.MarioCharacter.Lives--;
+            this.GotoLoseState = true;
         }
 
         this.RenderBlackout(context, ((Mario.MarioCharacter.XDeathPos - this.Camera.X) | 0), ((Mario.MarioCharacter.YDeathPos - this.Camera.Y) | 0), (320 - t) | 0);
     }
+
+    Mario.MathQuiz.draw(context);
+    Mario.ShowCongrats.draw(context);
 };
 
 Mario.LevelState.prototype.DrawStringShadow = function(context, string, x, y) {
@@ -448,10 +457,13 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
         if (Math.random() < 1/3) {
             world.QuizTimer = 0;
             world.QuizActive = true;
-            Mario.MathQuiz.show(function() {
+            Mario.MathQuiz.show(function(firstTry) {
+                var pts = firstTry ? 2 : 1;
                 world.QuizActive = false;
-                world.QuizSolved += 1;
-                localStorage.setItem('quizSolved', world.QuizSolved);
+                world.SessionPoints += pts;
+                world.QuizSolved = Mario.Scores.getScore(Mario.CurrentPlayer) + world.SessionPoints;
+                Mario.Scores.add(Mario.CurrentPlayer, pts);
+                Mario.ShowCongrats.show(firstTry);
                 world.BumpInto(x, y - 1);
                 if (isSpecial) {
                     Enjine.Resources.PlaySound("sprout");
