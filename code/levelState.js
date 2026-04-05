@@ -85,7 +85,6 @@ Mario.LevelState.prototype.Enter = function() {
 
 	this.GotoMapState = false;
 	this.GotoLoseState = false;
-    this.MusicStopped = false;
 };
 
 Mario.LevelState.prototype.Exit = function() {
@@ -339,7 +338,6 @@ Mario.LevelState.prototype.Draw = function(context) {
     }
 
     if (Mario.MarioCharacter.WinTime > 0) {
-    	if (!this.MusicStopped) { Mario.StopMusic(); Mario.PlayLevelComplete(); this.MusicStopped = true; }
         t = Mario.MarioCharacter.WinTime + this.Delta;
         t = t * t * 0.2;
 
@@ -353,11 +351,6 @@ Mario.LevelState.prototype.Draw = function(context) {
     }
 
     if (Mario.MarioCharacter.DeathTime > 0) {
-    	if (!this.MusicStopped) {
-    	    Mario.StopMusic();
-    	    if (Mario.MarioCharacter.Lives <= 1) { Mario.PlayGameOver(); } else { Mario.PlayLostALife(); }
-    	    this.MusicStopped = true;
-    	}
         t = Mario.MarioCharacter.DeathTime + this.Delta;
         t = t * t * 0.1;
 
@@ -454,7 +447,7 @@ Mario.LevelState.prototype.Bump = function(x, y, canBreakBricks) {
         world.Level.SetBlock(x, y, 4);
         world.Level.SetBlockData(x, y, 4);
 
-        if (Math.random() < 1/3 && world.QuizTimer >= 30) {
+        if (Math.random() < 1/3 && world.QuizTimer >= 15) {
             world.QuizTimer = 0;
             world.QuizActive = true;
             Mario.MathQuiz.show(function(firstTry) {
