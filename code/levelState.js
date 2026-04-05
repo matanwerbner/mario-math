@@ -12,7 +12,7 @@ Mario.LevelState = function(difficulty, type) {
 
     this.Paused = false;
     this.QuizActive = false;
-    this.QuizTimer = 0;
+    this.QuizTimer = 15;
     this.QuizSolved = 0;
     this.SessionPoints = 0;
     this.Sprites = null;
