@@ -117,7 +117,7 @@ Mario.LevelState.prototype.Update = function(delta) {
     }
 
     this.QuizTimer += delta;
-    if (this.QuizTimer >= 20) {
+    if (this.QuizTimer >= 25) {
         this.QuizTimer = 0;
         var timerWorld = this;
         timerWorld.QuizActive = true;
