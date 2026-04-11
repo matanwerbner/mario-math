@@ -14,43 +14,46 @@ Mario.MathQuiz = (function() {
     var savedKeyDown = null;
 
     function generate() {
-        var ops = ['+', '-', '*'];
-        var op1 = ops[(Math.random() * 3) | 0];
-        var op2 = ops[(Math.random() * 3) | 0];
-        var a, b, c, answer, q;
+        // Generate equation: a*x + b = c*x + d  where (a - c) != 0
+        // x = (d - b) / (a - c), forced to be an integer
+        var x, a, b, c, d, coefDiff;
 
-        function randOperand() {
-            var n = ((Math.random() * 10) | 0) + 1;
-            return Math.random() < 0.5 ? n : -n;
+        // Pick x in range [-9, 9] excluding 0
+        do { x = ((Math.random() * 19) | 0) - 9; } while (x === 0);
+
+        // Pick left coefficient a in range [1, 5] with random sign
+        a = (((Math.random() * 5) | 0) + 1) * (Math.random() < 0.5 ? 1 : -1);
+
+        // Pick right coefficient c != a, in [-4, 4] excluding 0
+        do {
+            c = (((Math.random() * 4) | 0) + 1) * (Math.random() < 0.5 ? 1 : -1);
+        } while (c === a);
+
+        // Pick b in range [-9, 9]
+        b = ((Math.random() * 19) | 0) - 9;
+
+        // d chosen so equation holds: a*x + b = c*x + d => d = (a-c)*x + b
+        d = (a - c) * x + b;
+
+        // Format a coefficient on x: e.g. 1x -> "x", -1x -> "-x", 2x -> "2x"
+        function fmtCoef(n) {
+            if (n === 1)  return 'x';
+            if (n === -1) return '-x';
+            return n + 'x';
         }
 
-        a = randOperand();
-        b = randOperand();
-        c = randOperand();
-
-        if (op1 === '*' && op2 === '*') {
-            answer = a * b * c;
-        } else if (op1 === '*') {
-            answer = (a * b) + (op2 === '+' ? c : -c);
-        } else if (op2 === '*') {
-            answer = a + (op1 === '+' ? 1 : -1) * (b * c);
-        } else {
-            var ab = op1 === '+' ? a + b : a - b;
-            answer = op2 === '+' ? ab + c : ab - c;
+        // Format "+ b" or "- |b|" for the constant term (omit if 0)
+        function fmtConst(n) {
+            if (n === 0) return '';
+            if (n > 0)   return ' + ' + n;
+            return ' - ' + Math.abs(n);
         }
 
-        function displayOp(op) { return op === '*' ? 'x' : op; }
-        function fmt(n) { return n < 0 ? '(' + n + ')' : '' + n; }
+        var lhs = fmtCoef(a) + fmtConst(b);
+        var rhs = fmtCoef(c) + fmtConst(d);
+        var q = lhs + ' = ' + rhs;
 
-        if (op1 === '*' && op2 !== '*') {
-            q = '(' + fmt(a) + ' x ' + fmt(b) + ') ' + displayOp(op2) + ' ' + fmt(c) + ' = ?';
-        } else if (op2 === '*' && op1 !== '*') {
-            q = fmt(a) + ' ' + displayOp(op1) + ' (' + fmt(b) + ' x ' + fmt(c) + ') = ?';
-        } else {
-            q = fmt(a) + ' ' + displayOp(op1) + ' ' + fmt(b) + ' ' + displayOp(op2) + ' ' + fmt(c) + ' = ?';
-        }
-
-        return { question: q, answer: answer };
+        return { question: q, answer: x };
     }
 
     function onKeyDown(e) {
@@ -145,16 +148,16 @@ Mario.MathQuiz = (function() {
         context.lineWidth = 2;
         context.strokeRect(bx + shakeX + 1, by + 1, bw - 2, bh - 2);
 
-        // title: "MATH CHALLENGE"
-        drawText(context, 'MATH CHALLENGE', 160 + shakeX, by + 10, '#f5c518', true);
+        // title: "SOLVE FOR X"
+        drawText(context, 'SOLVE FOR X', 160 + shakeX, by + 10, '#f5c518', true);
 
         // question line
         drawText(context, question, 160 + shakeX, by + 28, '#ffffff', true);
 
-        // input box area
+        // input box area: "x = _"
         var inputDisplay = inputStr.length > 0 ? inputStr : '';
         var showCursor = Math.floor(cursorTimer) % 2 === 0;
-        var inputText = inputDisplay + (showCursor ? '_' : ' ');
+        var inputText = 'x = ' + inputDisplay + (showCursor ? '_' : ' ');
         drawText(context, inputText, 160 + shakeX, by + 48, '#f5c518', true);
 
         // error message
