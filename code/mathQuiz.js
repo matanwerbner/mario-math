@@ -14,44 +14,133 @@ Mario.MathQuiz = (function() {
     var savedKeyDown = null;
 
     function generate() {
-        // Generate equation: a*x + b = c*x + d  where (a - c) != 0
-        // x = (d - b) / (a - c), forced to be an integer
-        var x, a, b, c, d, coefDiff;
+        // Generate a harder multi-term equation with distribution and combining.
+        // We pick x in [-9,9] \ {0}, then randomly choose one of several templates,
+        // filling in coefficients so the equation is always valid.
 
-        // Pick x in range [-9, 9] excluding 0
+        var x;
         do { x = ((Math.random() * 19) | 0) - 9; } while (x === 0);
 
-        // Pick left coefficient a in range [1, 5] with random sign
-        a = (((Math.random() * 5) | 0) + 1) * (Math.random() < 0.5 ? 1 : -1);
+        // Helper: random int in [lo, hi] (inclusive)
+        function ri(lo, hi) { return ((Math.random() * (hi - lo + 1)) | 0) + lo; }
 
-        // Pick right coefficient c != a, in [-4, 4] excluding 0
-        do {
-            c = (((Math.random() * 4) | 0) + 1) * (Math.random() < 0.5 ? 1 : -1);
-        } while (c === a);
+        // Helper: nonzero random int in [lo, hi]
+        function rnz(lo, hi) {
+            var v; do { v = ri(lo, hi); } while (v === 0); return v;
+        }
 
-        // Pick b in range [-9, 9]
-        b = ((Math.random() * 19) | 0) - 9;
-
-        // d chosen so equation holds: a*x + b = c*x + d => d = (a-c)*x + b
-        d = (a - c) * x + b;
-
-        // Format a coefficient on x: e.g. 1x -> "x", -1x -> "-x", 2x -> "2x"
-        function fmtCoef(n) {
+        // Format coefficient before x: 1->"x", -1->"-x", n->"nx"
+        function fc(n) {
             if (n === 1)  return 'x';
             if (n === -1) return '-x';
             return n + 'x';
         }
 
-        // Format "+ b" or "- |b|" for the constant term (omit if 0)
-        function fmtConst(n) {
+        // Format a constant term joined with a sign: fmtJoin(3) -> "+ 3", fmtJoin(-3) -> "- 3"
+        // Never produces "- 0" or "+ 0"; returns '' when n === 0
+        function fj(n) {
             if (n === 0) return '';
-            if (n > 0)   return ' + ' + n;
-            return ' - ' + Math.abs(n);
+            if (n > 0) return '+ ' + n;
+            return '- ' + Math.abs(n);
         }
 
-        var lhs = fmtCoef(a) + fmtConst(b);
-        var rhs = fmtCoef(c) + fmtConst(d);
-        var q = lhs + ' = ' + rhs;
+        // Format outer term for parenthesised expressions: n -> "n(" or "-(" or "("
+        function fOuter(n) {
+            if (n === 1)  return '(';
+            if (n === -1) return '-(';
+            return n + '(';
+        }
+
+        var type = ri(0, 4);
+        var lhs, rhs, q;
+
+        if (type === 0) {
+            // Template: a - (b + cx) = d(e - x) + fx
+            // LHS expands: a - b - cx
+            // RHS expands: de - dx + fx = de + (f-d)x
+            // Combined: (a-b) - cx = de + (f-d)x
+            // Setting equal: a - b - de = (f - d + c)x
+            // x = (a - b - de) / (f - d + c),  denominator must != 0
+            var ef = rnz(2, 6), d2 = rnz(2, 5);
+            var f = ri(-4, 4);
+            var cv = rnz(1, 4);
+            // denominator = f - d2 + cv
+            while (f - d2 + cv === 0) { f = ri(-4, 4); }
+            var denom = f - d2 + cv;
+            // a - b = x * denom + d2 * ef
+            var ab = x * denom + d2 * ef;
+            var b2 = ri(-5, 5);
+            var a2 = ab + b2;
+            // LHS: a2 - (b2 + cv*x)  — cv is always positive so inner is "b2 + cvx"
+            var innerB2 = b2 === 0 ? fc(cv) : (b2 + ' + ' + fc(cv));
+            lhs = a2 + ' - (' + innerB2 + ')';
+            // RHS: d2*(ef - x) + f*x
+            var rhsParen = fOuter(d2) + ef + ' - x)';
+            var rhsTail = f === 0 ? '' : (f === 1 ? ' + x' : f === -1 ? ' - x' : ' ' + fj(f) + 'x');
+            rhs = rhsParen + rhsTail;
+            q = lhs + ' = ' + rhs;
+
+        } else if (type === 1) {
+            // Template: -ax + b(cx + d) = k   where k = (bc-a)*x*val + bd
+            // Expand LHS: (bc-a)x + bd
+            // RHS is just a constant k, computed from x
+            // This avoids the ambiguous "nx(..." notation entirely.
+            var a3 = rnz(1, 5), b3 = rnz(2, 5), c3 = rnz(1, 4);
+            var lxCoef = b3 * c3 - a3;
+            // Ensure lxCoef != 0 so x is uniquely determined
+            while (lxCoef === 0) { a3 = rnz(1, 5); lxCoef = b3 * c3 - a3; }
+            // Pick d3 freely; k = lxCoef*x + b3*d3
+            var d3 = ri(-9, 9);
+            var k3 = lxCoef * x + b3 * d3;
+            var d3tail = fj(d3) ? ' ' + fj(d3) : '';
+            lhs = '-' + fc(a3) + ' + ' + fOuter(b3) + fc(c3) + d3tail + ')';
+            rhs = '' + k3;
+            q = lhs + ' = ' + rhs;
+
+        } else if (type === 2) {
+            // Template: a(x + b) + c(x + b) = k
+            // = (a+c)(x+b) = k  => x = k/(a+c) - b
+            var a4 = rnz(1, 6), c4 = rnz(1, 6), b4 = ri(-9, 9);
+            var k = (a4 + c4) * (x + b4);
+            var b4str = fj(b4) ? 'x ' + fj(b4) : 'x';
+            lhs = fOuter(a4) + b4str + ') + ' + fOuter(c4) + b4str + ')';
+            rhs = '' + k;
+            q = lhs + ' = ' + rhs;
+
+        } else if (type === 3) {
+            // Template: a(bx + c) - d(ex + f) = g
+            // LHS: (ab-de)x + (ac-df)
+            // g = (ab-de)*x + (ac-df)
+            var a5 = rnz(1, 4), b5 = rnz(1, 4), c5 = ri(-8, 8);
+            var d5 = rnz(1, 4), e5 = rnz(1, 4), f5 = ri(-8, 8);
+            while (a5 * b5 === d5 * e5) { e5 = rnz(1, 4); }
+            var g5 = (a5 * b5 - d5 * e5) * x + (a5 * c5 - d5 * f5);
+            var c5tail = fj(c5) ? ' ' + fj(c5) : '';
+            var f5tail = fj(f5) ? ' ' + fj(f5) : '';
+            var lp1 = fOuter(a5) + fc(b5) + c5tail + ')';
+            var lp2 = fOuter(d5) + fc(e5) + f5tail + ')';
+            q = lp1 + ' - ' + lp2 + ' = ' + g5;
+
+        } else {
+            // Template: a(x + b) = c(x + d) + e
+            // LHS: ax + ab   RHS: cx + cd + e
+            // (a-c)x = cd + e - ab => pick a != c, then solve for relationship
+            var a6 = rnz(1, 6), b6 = ri(-9, 9);
+            var c6; do { c6 = rnz(1, 6); } while (c6 === a6);
+            // (a6-c6)*x = c6*d6 + e6 - a6*b6
+            // Pick e6 freely, derive d6 so equation holds
+            var e6 = ri(-9, 9);
+            var needed = (a6 - c6) * x + a6 * b6 - e6; // = c6*d6
+            // If not divisible by c6, adjust e6
+            while (needed % c6 !== 0) { e6 = ri(-9, 9); needed = (a6 - c6) * x + a6 * b6 - e6; }
+            var d6 = needed / c6;
+            var b6str = fj(b6) ? 'x ' + fj(b6) : 'x';
+            var d6str = fj(d6) ? 'x ' + fj(d6) : 'x';
+            var e6str = fj(e6) ? ' ' + fj(e6) : '';
+            lhs = fOuter(a6) + b6str + ')';
+            rhs = fOuter(c6) + d6str + ')' + e6str;
+            q = lhs + ' = ' + rhs;
+        }
 
         return { question: q, answer: x };
     }
