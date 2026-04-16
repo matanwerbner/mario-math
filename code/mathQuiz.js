@@ -221,8 +221,8 @@ Mario.MathQuiz = (function() {
         context.fillStyle = 'rgba(0,0,0,0.7)';
         context.fillRect(0, 0, 320, 240);
 
-        // box: 220x110 centered at 160,120
-        var bx = 50, by = 75, bw = 220, bh = 90;
+        // box: 300x90 centered at 160,120
+        var bx = 10, by = 75, bw = 300, bh = 90;
 
         // shake offset
         var shakeX = 0;
