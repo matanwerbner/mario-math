@@ -146,21 +146,16 @@ Mario.MathQuiz = (function() {
     }
 
     function onKeyDown(e) {
-        var code = e.keyCode;
-        // digits 0-9
-        if (code >= 48 && code <= 57) {
-            inputStr += String.fromCharCode(code);
-        // numpad 0-9
-        } else if (code >= 96 && code <= 105) {
-            inputStr += String.fromCharCode(code - 48);
-        // minus / numpad minus (allow negative input)
-        } else if ((code === 189 || code === 109) && inputStr === '') {
+        var key = e.key;
+        // digits 0-9 (main row and numpad both report "0".."9")
+        if (key.length === 1 && key >= '0' && key <= '9') {
+            inputStr += key;
+        // minus (layout-independent, allow negative input)
+        } else if (key === '-' && inputStr === '') {
             inputStr = '-';
-        // backspace
-        } else if (code === 8) {
+        } else if (key === 'Backspace') {
             inputStr = inputStr.slice(0, -1);
-        // enter
-        } else if (code === 13) {
+        } else if (key === 'Enter') {
             checkAnswer();
         }
         e.preventDefault();
