@@ -116,18 +116,22 @@ Mario.LevelState.prototype.Update = function(delta) {
         return;
     }
 
-    this.QuizTimer += delta;
+    // Pause the quiz timer while Mario is dying or the level is ending, so a
+    // quiz never pops during a transition.
+    if (Mario.MarioCharacter.DeathTime <= 0 && Mario.MarioCharacter.WinTime <= 0) {
+        this.QuizTimer += delta;
+    }
     if (this.QuizTimer >= 25) {
         this.QuizTimer = 0;
         var timerWorld = this;
         timerWorld.QuizActive = true;
-        Mario.MathQuiz.show(function(firstTry) {
-            var pts = firstTry ? 2 : 1;
+        Mario.MathQuiz.show(function(res) {
+            var pts = res.gaveUp ? 0 : res.tier * (res.firstTry ? 2 : 1);
             timerWorld.QuizActive = false;
             timerWorld.SessionPoints += pts;
             timerWorld.QuizSolved = Mario.Scores.getScore(Mario.CurrentPlayer) + timerWorld.SessionPoints;
-            Mario.Scores.add(Mario.CurrentPlayer, pts);
-            Mario.ShowCongrats.show(firstTry);
+            if (pts > 0) { Mario.Scores.add(Mario.CurrentPlayer, pts); }
+            Mario.ShowCongrats.show(res.firstTry);
         });
         return;
     }
